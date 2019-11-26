@@ -1,8 +1,8 @@
 // a library to wrap and simplify api calls
-import apisauce from 'apisauce'
+import apisauce from 'apisauce';
 
 // our "constructor"
-const create = (baseURL = 'https://api.github.com/') => {
+const create = (baseURL = 'https://pokeapi.co/api/v2/') => {
   // ------
   // STEP 1
   // ------
@@ -10,15 +10,13 @@ const create = (baseURL = 'https://api.github.com/') => {
   // Create and configure an apisauce-based api object.
   //
   const api = apisauce.create({
-    // base URL is read from the "constructor"
-    baseURL,
     // here are some default headers
     headers: {
-      'Cache-Control': 'no-cache'
+      'Cache-Control': 'no-cache',
     },
     // 10 second timeout...
-    timeout: 10000
-  })
+    timeout: 10000,
+  });
 
   // ------
   // STEP 2
@@ -34,9 +32,129 @@ const create = (baseURL = 'https://api.github.com/') => {
   // Since we can't hide from that, we embrace it by getting out of the
   // way at this level.
   //
-  const getRoot = () => api.get('')
-  const getRate = () => api.get('rate_limit')
-  const getUser = (username) => api.get('search/users', {q: username})
+
+  function getPokemonPromise(data) {
+    return Promise.all(
+      data.map(async item => {
+        const temp = await api.get(item.url);
+        return temp.data;
+      }),
+    );
+  }
+
+  function getPokemonBySpeciesPromise(data) {
+    return Promise.all(
+      data.map(async item => {
+        const temp = await api.get(item.url);
+
+        const results = await getPokemonPromise(temp.data.varieties);
+
+        return results.data;
+      }),
+    );
+  }
+
+  function getPokemonSkillPromise(data) {
+    return Promise.all(
+      data.map(async item => {
+        const temp = await api.get(item.ability.url);
+        return temp.data;
+      }),
+    );
+  }
+
+  const getPokemon = ({ nextUrl, filter = {} }) => {
+    let url = `${baseURL}pokemon/`;
+    if (nextUrl) {
+      url = nextUrl;
+    }
+
+    return api
+      .get(url, {
+        ...filter,
+      })
+      .then(async result => {
+        const tempResult = { ...result };
+
+        const finalData = await getPokemonPromise(result.data.results);
+
+        tempResult.data.results = finalData;
+
+        return tempResult;
+      });
+  };
+
+  const getPokemonDetail = pokemonId => {
+    return api.get(`${baseURL}pokemon/${pokemonId}`);
+  };
+
+  const getPokemonSkills = async data => {
+    const results = await getPokemonSkillPromise(data);
+
+    return results;
+  };
+
+  const getPokemonBySpecies = async data => {
+    const results = await getPokemonBySpeciesPromise(data);
+
+    const pokemonList = [];
+
+    results.forEach(pokemonSpecies => {
+      pokemonSpecies.forEach(pokemon => {
+        pokemonList.push(pokemon);
+      });
+    });
+
+    return pokemonList;
+  };
+
+  const getPokemonColors = (colorId = '') => {
+    const url = `${baseURL}pokemon-color/`;
+    if (colorId !== '') {
+      return api.get(`${baseURL}pokemon-color/${colorId}`);
+    }
+    return api.get(url).then(async result => {
+      const tempResult = { ...result };
+
+      const finalData = await getPokemonPromise(result.data.results);
+
+      tempResult.data.results = finalData;
+
+      return tempResult;
+    });
+  };
+
+  const getPokemonTypes = (typeId = '') => {
+    const url = `${baseURL}type/`;
+    if (typeId !== '') {
+      return api.get(`${baseURL}type/${typeId}`);
+    }
+    return api.get(url).then(async result => {
+      const tempResult = { ...result };
+
+      const finalData = await getPokemonPromise(result.data.results);
+
+      tempResult.data.results = finalData;
+
+      return tempResult;
+    });
+  };
+
+  const getPokemonHabitats = (habitatId = '') => {
+    const url = `${baseURL}pokemon-habitat/`;
+    if (habitatId !== '') {
+      return api.get(`${baseURL}pokemon-habitat/${habitatId}`);
+    }
+    return api.get(url).then(async result => {
+      const tempResult = { ...result };
+
+      const finalData = await getPokemonPromise(result.data.results);
+
+      tempResult.data.results = finalData;
+
+      return tempResult;
+    });
+  };
 
   // ------
   // STEP 3
@@ -52,13 +170,17 @@ const create = (baseURL = 'https://api.github.com/') => {
   //
   return {
     // a list of the API functions from step 2
-    getRoot,
-    getRate,
-    getUser
-  }
-}
+    getPokemon,
+    getPokemonDetail,
+    getPokemonSkills,
+    getPokemonColors,
+    getPokemonTypes,
+    getPokemonHabitats,
+    getPokemonBySpecies,
+  };
+};
 
 // let's return back our create method as the default.
 export default {
-  create
-}
+  create,
+};

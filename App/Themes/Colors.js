@@ -3,6 +3,9 @@ const colors = {
   clear: 'rgba(0,0,0,0)',
   facebook: '#3b5998',
   transparent: 'rgba(0,0,0,0)',
+  title: '#606060',
+  primary: '#224a71',
+  white: '#fff',
   silver: '#F7F7F7',
   steel: '#CCCCCC',
   error: 'rgba(200, 0, 0, 0.8)',
@@ -12,7 +15,9 @@ const colors = {
   windowTint: 'rgba(0, 0, 0, 0.4)',
   panther: '#161616',
   charcoal: '#595959',
+  gray: '#888888',
   coal: '#2d2d2d',
+  darkGray: '#58595B',
   bloodOrange: '#fb5f26',
   snow: 'white',
   ember: 'rgba(164, 0, 48, 0.5)',
@@ -21,7 +26,7 @@ const colors = {
   eggplant: '#251a34',
   border: '#483F53',
   banner: '#5F3E63',
-  text: '#E0D7E5'
-}
+  text: '#E0D7E5',
+};
 
-export default colors
+export default colors;
